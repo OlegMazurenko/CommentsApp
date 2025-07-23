@@ -27,5 +27,9 @@ public class AppDbContext : DbContext
             .WithMany(c => c.Files)
             .HasForeignKey(f => f.CommentId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CaptchaEntry>()
+            .Property(c => c.Code)
+            .HasMaxLength(10);
     }
 }

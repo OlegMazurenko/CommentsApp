@@ -29,7 +29,8 @@ public class CaptchaController : ControllerBase
         {
             Id = id,
             Code = code,
-            Expiration = DateTime.UtcNow.AddMinutes(5)
+            //Expiration = DateTime.UtcNow.AddMinutes(5)
+            Expiration = DateTime.UtcNow.AddDays(30) // for testing purposes
         });
 
         _context.SaveChanges();

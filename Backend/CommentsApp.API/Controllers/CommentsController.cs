@@ -1,8 +1,7 @@
 ﻿using CommentsApp.API.Data;
 using CommentsApp.API.Hubs;
 using CommentsApp.API.Models;
-
-using Ganss.Xss;
+using CommentsApp.API.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -53,6 +52,15 @@ public class CommentsController : ControllerBase
             _context.Users.Add(user);
         }
 
+        var parentComment = dto.ParentCommentId.HasValue
+            ? await _context.Comments.FindAsync(dto.ParentCommentId.Value)
+            : null;
+
+        if (dto.ParentCommentId.HasValue && parentComment == null)
+        {
+            return BadRequest($"Parent comment with Id {dto.ParentCommentId} not found.");
+        }
+
         var comment = new Comment
         {
             Text = _sanitizer.Sanitize(dto.Text),
@@ -78,7 +86,7 @@ public class CommentsController : ControllerBase
 
             if (fileDto.ContentType.StartsWith("image/"))
             {
-                content = ResizeImageIfNeeded(content, 320, 240); // ImageSharp
+                content = ResizeImageIfNeeded(content, 320, 240);
             }
 
             var file = new FileUpload
