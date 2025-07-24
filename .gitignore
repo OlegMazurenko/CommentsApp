@@ -416,3 +416,36 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# ========== Angular / Frontend ==========
+# Angular build & cache
+**/.angular/cache/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Misc
+connect.lock
+coverage/
+libpeerconnection.log
+testem.log
+typings/
+**/.vscode/
+
+# Editors & IDEs
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+
+# System
+.DS_Store
+Thumbs.db
