@@ -1,0 +1,66 @@
+<div class="container mt-4">
+  <h4>Add a Comment</h4>
+
+  <!-- Error message -->
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="form" (ngSubmit)="submit()" enctype="multipart/form-data">
+    <!-- Name -->
+    <div class="mb-3">
+      <label class="form-label">Name</label>
+      <input formControlName="userName" type="text" class="form-control" />
+    </div>
+
+    <!-- Email -->
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input formControlName="email" type="email" class="form-control" />
+    </div>
+
+    <!-- Home Page -->
+    <div class="mb-3">
+      <label class="form-label">Home Page (optional)</label>
+      <input formControlName="homePage" type="url" class="form-control" />
+    </div>
+
+    <!-- Comment Text -->
+    <div class="mb-3">
+      <label class="form-label">Comment</label>
+      <textarea formControlName="text" class="form-control" rows="4"></textarea>
+    </div>
+
+    <!-- CAPTCHA -->
+    <div class="mb-3">
+      <label class="form-label">Captcha</label>
+      <div class="d-flex align-items-center">
+        <img [src]="captchaUrl" alt="CAPTCHA" class="me-2" />
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="loadCaptcha()">↻</button>
+      </div>
+      <input formControlName="captchaCode" type="text" class="form-control mt-2" />
+    </div>
+
+    <!-- File Upload -->
+    <div class="mb-3">
+      <label class="form-label">Attach files (optional)</label>
+      <input
+        type="file"
+        class="form-control"
+        (change)="onFileSelected($event)"
+        multiple
+        accept=".txt,image/jpeg,image/png,image/gif"
+      />
+      <div *ngIf="selectedFiles.length > 0" class="mt-2">
+        <strong>Selected files:</strong>
+        <ul class="mb-0">
+          <li *ngFor="let file of selectedFiles">{{ file.name }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Submit</button>
+  </form>
+</div>

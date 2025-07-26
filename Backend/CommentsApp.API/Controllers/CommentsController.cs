@@ -29,7 +29,7 @@ public class CommentsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> PostComment([FromBody] CommentDto dto)
+    public async Task<IActionResult> PostComment([FromForm] CommentDto dto)
     {
         var captcha = await _context.Captchas.FindAsync(dto.CaptchaId);
 

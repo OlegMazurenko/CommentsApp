@@ -20,7 +20,7 @@ public class CaptchaController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult Generate()
+    public async Task<IActionResult> Generate()
     {
         var (image, code) = _generator.GenerateCaptcha();
         var id = Guid.NewGuid();
@@ -29,11 +29,10 @@ public class CaptchaController : ControllerBase
         {
             Id = id,
             Code = code,
-            //Expiration = DateTime.UtcNow.AddMinutes(5)
             Expiration = DateTime.UtcNow.AddDays(30) // for testing purposes
         });
 
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return File(image, "image/png", $"{id}.png");
     }

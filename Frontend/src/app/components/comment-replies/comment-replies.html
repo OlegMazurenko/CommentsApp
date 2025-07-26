@@ -1,0 +1,29 @@
+<div *ngIf="isLoading">
+  <em>Loading replies...</em>
+</div>
+
+<div *ngIf="!isLoading && replies.length === 0">
+  <em>No replies</em>
+</div>
+
+<div *ngIf="!isLoading && replies.length > 0">
+  <div *ngFor="let reply of replies" class="reply">
+    <div class="card mb-2 ms-4">
+      <div class="card-body p-2">
+        <div class="d-flex justify-content-between">
+          <strong>{{ reply.userName }}</strong>
+          <small>{{ reply.createdAt | date:'short' }}</small>
+        </div>
+        <div class="text-muted small">{{ reply.email }}</div>
+        <div [innerHTML]="reply.text" class="mt-1"></div>
+      </div>
+    </div>
+
+    <!-- Recursive rendering of children -->
+    <div *ngIf="reply.children && reply.children.length > 0">
+      <app-comment-replies [commentId]="reply.id"></app-comment-replies>
+    </div>
+  </div>
+
+  <app-comment-form [parentCommentId]="commentId"></app-comment-form>
+</div>
