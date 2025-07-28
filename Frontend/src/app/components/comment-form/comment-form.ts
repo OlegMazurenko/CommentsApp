@@ -1,31 +1,26 @@
 import { Component, Input } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { DomSanitizer } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
-import {
-  ReactiveFormsModule,
-  FormBuilder,
-  FormGroup,
-  Validators
-} from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-
+import { ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-comment-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './comment-form.html',
-  styleUrls: ['./comment-form.css']
+  imports: [CommonModule, ReactiveFormsModule]
 })
 export class CommentForm {
+  @Input() parentCommentId?: number;
+
   form: FormGroup;
-  @Input() parentCommentId: number | null = null;
-
-  captchaId: string = '';
-  captchaUrl: string = '';
-  errorMessage: string = '';
   selectedFiles: File[] = [];
+  captchaUrl: string = '';
+  captchaId: string = '';
+  errorMessage: string = '';
 
-  constructor(private fb: FormBuilder, private http: HttpClient) {
+  constructor(private fb: FormBuilder, private http: HttpClient, private sanitizer: DomSanitizer) {
     this.form = this.fb.group({
       userName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -33,9 +28,7 @@ export class CommentForm {
       text: ['', Validators.required],
       captchaCode: ['', Validators.required]
     });
-  }
 
-  ngOnInit() {
     this.loadCaptcha();
   }
 
@@ -44,46 +37,21 @@ export class CommentForm {
       responseType: 'blob',
       observe: 'response'
     }).subscribe(response => {
+      const blob = response.body!;
+      const url = URL.createObjectURL(blob);
+      this.captchaUrl = this.sanitizer.bypassSecurityTrustUrl(url) as string;
+
       const contentDisposition = response.headers.get('Content-Disposition') || '';
-      const match = contentDisposition.match(/filename="?([a-f0-9\-]{36})\.png"?/i);
-
-      if (match && match[1]) {
-        this.captchaId = match[1];
-      } else {
-        console.error('Captcha ID not found in Content-Disposition:', contentDisposition);
-        this.captchaId = '';
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        this.captchaUrl = reader.result as string;
-      };
-      reader.readAsDataURL(response.body!);
+      const match = contentDisposition.match(/filename="?([a-f0-9-]{36})\.png"?/i);
+      this.captchaId = match?.[1] ?? '';
     });
   }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (!input.files) return;
-
-    this.selectedFiles = [];
-
-    Array.from(input.files).forEach(file => {
-      const isText = file.type === 'text/plain' && file.name.endsWith('.txt');
-      const isImage = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type);
-
-      if (!isText && !isImage) {
-        alert(`Unsupported file: ${file.name}`);
-        return;
-      }
-
-      if (isText && file.size > 100_000) {
-        alert(`Text file too large: ${file.name}`);
-        return;
-      }
-
-      this.selectedFiles.push(file);
-    });
+    if (input.files) {
+      this.selectedFiles = Array.from(input.files);
+    }
   }
 
   async submit() {
@@ -99,16 +67,30 @@ export class CommentForm {
     formData.append('parentCommentId', this.parentCommentId?.toString() ?? '');
 
     const fileReadPromises = this.selectedFiles.map((file, index) => {
-      return new Promise<void>((resolve) => {
+      return new Promise<void>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
-          const base64 = (reader.result as string).split(',')[1];
+          const result = reader.result as string;
+
+          // Проверка и безопасное извлечение base64
+          const base64 = result.includes(',') ? result.split(',')[1] : '';
+
+          if (!base64) {
+            console.warn(`Base64 content not found for file: ${file.name}`);
+            return reject(`Base64 not extracted for ${file.name}`);
+          }
+
           formData.append(`Files[${index}].FileName`, file.name);
           formData.append(`Files[${index}].ContentType`, file.type);
           formData.append(`Files[${index}].Base64Content`, base64);
           resolve();
         };
-        reader.readAsDataURL(file);
+
+        reader.onerror = () => {
+          reject(`Error reading file: ${file.name}`);
+        };
+
+        reader.readAsDataURL(file); // Поддерживает и изображения, и текст
       });
     });
 

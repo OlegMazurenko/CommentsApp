@@ -50,3 +50,9 @@ export interface CommentTree {
   createdAt: string;
   children: CommentTree[];
 }
+
+export interface UploadedFileDto {
+  fileName: string;
+  contentType: string;
+  base64Content: string;
+}
