@@ -110,22 +110,25 @@ public class CommentsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetComments(int page = 1, string sort = "date_desc")
     {
-        var query = _context.Comments.Include(c => c.User).Where(c => c.ParentCommentId == null);
+        var query = _context.Comments
+            .Include(c => c.User)
+            .Where(c => c.ParentCommentId == null);
 
-        query = sort switch //TODO: maybe move to enum
+        query = sort switch
         {
             "user_asc" => query.OrderBy(c => c.User.UserName),
             "user_desc" => query.OrderByDescending(c => c.User.UserName),
             "email_asc" => query.OrderBy(c => c.User.Email),
             "email_desc" => query.OrderByDescending(c => c.User.Email),
-            _ => query.OrderByDescending(c => c.CreatedAt), // LIFO default
+            _ => query.OrderByDescending(c => c.CreatedAt),
         };
 
+        const int pageSize = 25;
+
         var comments = await query
-            .Include(c => c.User)
             .Include(c => c.Replies)
-            .Skip((page - 1) * 25)
-            .Take(25)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         var result = comments.Select(c => new CommentListItemDto
@@ -139,7 +142,13 @@ public class CommentsController : ControllerBase
             ReplyCount = c.Replies.Count
         });
 
-        return Ok(result);
+        var isLastPage = comments.Count < pageSize;
+
+        return Ok(new
+        {
+            comments = result,
+            isLastPage
+        });
     }
 
     [HttpGet("{id}/replies")]
@@ -161,7 +170,16 @@ public class CommentsController : ControllerBase
 
         var replyTrees = parent.Replies
             .OrderByDescending(r => r.CreatedAt)
-            .Select(BuildCommentTree)
+            .Select(r => new ReplyDto
+            {
+                Id = r.Id,
+                Text = r.Text,
+                CreatedAt = r.CreatedAt,
+                UserName = r.User.UserName,
+                Email = r.User.Email,
+                HomePage = r.User.HomePage,
+                RepliesCount = r.Replies.Count
+            })
             .ToList();
 
         return Ok(replyTrees);

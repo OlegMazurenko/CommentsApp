@@ -1,68 +1,42 @@
 <div class="container mt-4">
-  <app-comment-form></app-comment-form>
+  <button class="btn btn-success mb-3" (click)="toggleMainForm()">
+    {{ showMainForm() ? 'Hide Comment Form' : 'Add Comment' }}
+  </button>
+
+  <app-comment-form *ngIf="showMainForm()"></app-comment-form>
+
   <h2>Comments</h2>
-  <table class="table table-striped table-bordered">
-    <thead>
-      <tr>
-        <th (click)="changeSort('user')" style="cursor: pointer;">
-          Username
-          <span *ngIf="sortField === 'user'">
-            {{ sortDir === 'asc' ? '▲' : '▼' }}
-          </span>
-        </th>
-        <th (click)="changeSort('email')" style="cursor: pointer;">
-          Email
-          <span *ngIf="sortField === 'email'">
-            {{ sortDir === 'asc' ? '▲' : '▼' }}
-          </span>
-        </th>
-        <th>Text</th>
-        <th (click)="changeSort('created')" style="cursor: pointer;">
-          Date
-          <span *ngIf="sortField === 'created'">
-            {{ sortDir === 'asc' ? '▲' : '▼' }}
-          </span>
-        </th>
-        <th>Replies</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let comment of comments">
-        <!-- Top-level comment row -->
-        <tr>
-          <td>{{ comment.userName }}</td>
-          <td>{{ comment.email }}</td>
-          <td [innerHTML]="comment.text"></td>
-          <td>{{ comment.createdAt | date: 'short' }}</td>
-          <td>{{ comment.replyCount }}</td>
-          <td>
-            <button class="btn btn-sm btn-outline-primary"
-                    (click)="toggleReplies(comment.id)">
-              {{ selectedCommentId === comment.id ? 'Hide' : 'Show' }} replies
-            </button>
-          </td>
-        </tr>
+  <div *ngFor="let comment of comments" class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">{{ comment.userName }}</h5>
+      <h6 class="card-subtitle mb-2 text-muted">{{ comment.email }}</h6>
+      <p class="card-text" [innerHTML]="comment.text"></p>
+      <p class="card-subtitle text-muted">{{ comment.createdAt | date: 'short' }}</p>
+      <div class="mt-2">
+        <button class="btn btn-sm btn-outline-primary me-1" (click)="toggleReplies(comment.id)">
+          {{ selectedCommentId === comment.id ? 'Hide Replies' : ('Show Replies (' + comment.replyCount + ')') }}
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="toggleReplyForm(comment.id)">
+          {{ replyFormsVisible[comment.id] ? 'Cancel Reply' : 'Reply' }}
+        </button>
+      </div>
+    </div>
+    <div *ngIf="selectedCommentId === comment.id" class="card-body border-top">
+      <app-comment-replies [commentId]="comment.id"></app-comment-replies>
+    </div>
+    <div *ngIf="replyFormsVisible[comment.id]" class="card-body border-top">
+      <app-comment-form [parentCommentId]="comment.id"></app-comment-form>
+    </div>
+  </div>
 
-        <!-- Replies row -->
-        <tr *ngIf="selectedCommentId === comment.id">
-          <td colspan="6">
-            <app-comment-replies [commentId]="comment.id"></app-comment-replies>
-          </td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
-
-  <div class="d-flex justify-content-between align-items-center mt-3">
+  <div class="d-flex justify-content-between">
     <button class="btn btn-secondary" (click)="prevPage()" [disabled]="currentPage === 1">
       ← Previous
     </button>
-
     <span>Page {{ currentPage }}</span>
-
-    <button class="btn btn-secondary" (click)="nextPage()">
+    <button class="btn btn-secondary" (click)="nextPage()" [disabled]="isLastPage">
       Next →
     </button>
   </div>
 </div>
+

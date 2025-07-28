@@ -1,67 +1,81 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-
-import { CommentApiService } from '../../services/comment-api';
-import { CommentListItem } from '../../models/comment.model';
-import { CommentReplies } from '../comment-replies/comment-replies';
+import { Component, signal } from '@angular/core';
+import { CommonModule, DatePipe, NgIf, NgFor } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { CommentForm } from '../comment-form/comment-form';
+import { CommentReplies } from '../comment-replies/comment-replies';
+
+interface CommentListItem {
+  id: number;
+  userName: string;
+  email: string;
+  homePage?: string;
+  text: string;
+  createdAt: string;
+  replyCount: number;
+}
 
 @Component({
   selector: 'app-comment-list',
   standalone: true,
-  templateUrl: './comment-list.html',
-  styleUrl: './comment-list.css',
-  imports: [
-    CommonModule,
-    CommentReplies,
-    CommentForm
-  ]
+  imports: [CommonModule, NgIf, NgFor, DatePipe, CommentForm, CommentReplies],
+  templateUrl: './comment-list.html'
 })
-export class CommentList implements OnInit {
+export class CommentList {
   comments: CommentListItem[] = [];
   currentPage = 1;
-  totalPages = 1;
   sortField = 'created';
-  sortDir: 'asc' | 'desc' = 'desc';
-
+  sortOrder: 'asc' | 'desc' = 'desc';
   selectedCommentId: number | null = null;
+  replyFormsVisible: { [commentId: number]: boolean } = {};
+  showMainForm = signal(false);
+  isLastPage = false;
 
-  constructor(private api: CommentApiService) {}
-
-  ngOnInit(): void {
+  constructor(private http: HttpClient) {
     this.loadComments();
   }
 
-  loadComments(): void {
-    const sortParam = `${this.sortField}_${this.sortDir}`;
-    this.api.getComments(this.currentPage, sortParam).subscribe(data => {
-      this.comments = data;
-    });
+  loadComments() {
+    const url = `https://localhost:5001/api/comments?page=${this.currentPage}&sortField=${this.sortField}&sortOrder=${this.sortOrder}`;
+    this.http.get<{ comments: CommentListItem[]; isLastPage: boolean }>(url)
+      .subscribe(result => {
+        this.comments = result.comments;
+        this.isLastPage = result.isLastPage;
+      });
   }
 
-  changeSort(field: string): void {
+  changeSort(field: string) {
     if (this.sortField === field) {
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortField = field;
-      this.sortDir = 'asc';
+      this.sortOrder = 'asc';
     }
     this.loadComments();
   }
 
-  prevPage(): void {
+  toggleReplies(commentId: number) {
+    this.selectedCommentId = this.selectedCommentId === commentId ? null : commentId;
+  }
+
+  toggleReplyForm(commentId: number) {
+    this.replyFormsVisible[commentId] = !this.replyFormsVisible[commentId];
+  }
+
+  toggleMainForm() {
+    this.showMainForm.set(!this.showMainForm());
+  }
+
+  prevPage() {
     if (this.currentPage > 1) {
       this.currentPage--;
       this.loadComments();
     }
   }
 
-  nextPage(): void {
-    this.currentPage++;
-    this.loadComments();
-  }
-
-  toggleReplies(commentId: number): void {
-    this.selectedCommentId = this.selectedCommentId === commentId ? null : commentId;
+  nextPage() {
+    if (!this.isLastPage) {
+      this.currentPage++;
+      this.loadComments();
+    }
   }
 }
