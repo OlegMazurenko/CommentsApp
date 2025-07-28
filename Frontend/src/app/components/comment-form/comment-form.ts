@@ -1,26 +1,27 @@
 import { Component, Input } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { DomSanitizer } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-comment-form',
   standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './comment-form.html',
-  imports: [CommonModule, ReactiveFormsModule]
+  styleUrl: './comment-form.css'
 })
 export class CommentForm {
   @Input() parentCommentId?: number;
 
   form: FormGroup;
   selectedFiles: File[] = [];
-  captchaUrl: string = '';
-  captchaId: string = '';
-  errorMessage: string = '';
+  warnings: string[] = [];
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private sanitizer: DomSanitizer) {
+  captchaUrl = '';
+  captchaId = '';
+  errorMessage = '';
+
+  constructor(private fb: FormBuilder, private http: HttpClient) {
     this.form = this.fb.group({
       userName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -32,25 +33,63 @@ export class CommentForm {
     this.loadCaptcha();
   }
 
-  loadCaptcha() {
+  loadCaptcha(): void {
     this.http.get('https://localhost:5001/api/captcha', {
       responseType: 'blob',
       observe: 'response'
-    }).subscribe(response => {
-      const blob = response.body!;
-      const url = URL.createObjectURL(blob);
-      this.captchaUrl = this.sanitizer.bypassSecurityTrustUrl(url) as string;
+    }).subscribe({
+      next: response => {
+        const contentDisposition = response.headers.get('Content-Disposition') || '';
+        const match = contentDisposition.match(/filename="?(.+?)\.png"?/);
+        this.captchaId = match ? match[1] : '';
 
-      const contentDisposition = response.headers.get('Content-Disposition') || '';
-      const match = contentDisposition.match(/filename="?([a-f0-9-]{36})\.png"?/i);
-      this.captchaId = match?.[1] ?? '';
+        const blob = response.body;
+        if (blob) {
+          this.captchaUrl = URL.createObjectURL(blob);
+        } else {
+          console.error('CAPTCHA image is empty.');
+        }
+      },
+      error: error => {
+        console.error('Failed to load CAPTCHA:', error);
+      }
     });
   }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files) {
-      this.selectedFiles = Array.from(input.files);
+    if (!input.files) return;
+
+    this.selectedFiles = [];
+    this.warnings = [];
+
+    for (const file of Array.from(input.files)) {
+      if (file.type === 'text/plain') {
+        if (file.size > 100_000) {
+          this.warnings.push(`${file.name} is too large (max 100KB).`);
+          continue;
+        }
+      } else if (file.type.startsWith('image/')) {
+        if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+          this.warnings.push(`${file.name} is not a supported image format.`);
+          continue;
+        }
+      } else {
+        this.warnings.push(`${file.name} is not a supported file type.`);
+        continue;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        if (!base64) {
+          this.warnings.push(`${file.name} is empty or could not be read.`);
+          return;
+        }
+
+        this.selectedFiles.push(file);
+      };
+      reader.readAsDataURL(file);
     }
   }
 
@@ -67,30 +106,16 @@ export class CommentForm {
     formData.append('parentCommentId', this.parentCommentId?.toString() ?? '');
 
     const fileReadPromises = this.selectedFiles.map((file, index) => {
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<void>((resolve) => {
         const reader = new FileReader();
         reader.onload = () => {
-          const result = reader.result as string;
-
-          // Проверка и безопасное извлечение base64
-          const base64 = result.includes(',') ? result.split(',')[1] : '';
-
-          if (!base64) {
-            console.warn(`Base64 content not found for file: ${file.name}`);
-            return reject(`Base64 not extracted for ${file.name}`);
-          }
-
+          const base64 = (reader.result as string).split(',')[1] || '';
           formData.append(`Files[${index}].FileName`, file.name);
           formData.append(`Files[${index}].ContentType`, file.type);
           formData.append(`Files[${index}].Base64Content`, base64);
           resolve();
         };
-
-        reader.onerror = () => {
-          reject(`Error reading file: ${file.name}`);
-        };
-
-        reader.readAsDataURL(file); // Поддерживает и изображения, и текст
+        reader.readAsDataURL(file);
       });
     });
 

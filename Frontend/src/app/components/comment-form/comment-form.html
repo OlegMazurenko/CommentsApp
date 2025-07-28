@@ -1,48 +1,47 @@
 <div class="container mt-4">
-  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="mb-3">
-      <label for="userName" class="form-label">Name</label>
-      <input type="text" id="userName" formControlName="userName" class="form-control" required />
+      <label for="userName" class="form-label">User Name</label>
+      <input id="userName" type="text" class="form-control" formControlName="userName" />
     </div>
 
     <div class="mb-3">
       <label for="email" class="form-label">Email</label>
-      <input type="email" id="email" formControlName="email" class="form-control" required />
+      <input id="email" type="email" class="form-control" formControlName="email" />
     </div>
 
     <div class="mb-3">
       <label for="homePage" class="form-label">Home Page (optional)</label>
-      <input type="url" id="homePage" formControlName="homePage" class="form-control" />
+      <input id="homePage" type="text" class="form-control" formControlName="homePage" />
     </div>
 
     <div class="mb-3">
-      <label for="text" class="form-label">Comment</label>
-      <textarea id="text" formControlName="text" class="form-control" rows="5" required></textarea>
+      <label for="text" class="form-label">Comment Text</label>
+      <textarea id="text" rows="4" class="form-control" formControlName="text"></textarea>
     </div>
 
     <div class="mb-3">
-      <label for="files" class="form-label">Attach files (TXT or Images)</label>
-      <input type="file" id="files" (change)="onFileSelected($event)" class="form-control" multiple
-             accept=".txt,image/png,image/jpeg,image/gif" />
-      <div *ngIf="selectedFiles.length > 0" class="mt-2">
-        <strong>Selected files:</strong>
-        <ul>
-          <li *ngFor="let file of selectedFiles">{{ file.name }} ({{ file.type }})</li>
-        </ul>
-      </div>
+      <label for="files" class="form-label">Attach files (images or .txt)</label>
+      <input id="files" type="file" class="form-control" multiple (change)="onFileSelected($event)" />
+    </div>
+
+    <div *ngIf="warnings.length > 0" class="alert alert-warning">
+      <ul class="mb-0">
+        <li *ngFor="let warning of warnings">{{ warning }}</li>
+      </ul>
     </div>
 
     <div class="mb-3">
       <label class="form-label">CAPTCHA</label>
       <div class="d-flex align-items-center">
-        <img [src]="captchaUrl" alt="Captcha" class="me-3 border rounded" style="height: 50px;" />
+        <img [src]="captchaUrl" alt="CAPTCHA" style="height: 50px; margin-right: 1rem;" />
         <button type="button" class="btn btn-outline-secondary btn-sm" (click)="loadCaptcha()">Reload</button>
       </div>
     </div>
 
     <div class="mb-3">
-      <label for="captchaCode" class="form-label">Enter CAPTCHA</label>
-      <input type="text" id="captchaCode" formControlName="captchaCode" class="form-control" required />
+      <label for="captchaCode" class="form-label">Enter CAPTCHA Code</label>
+      <input id="captchaCode" type="text" class="form-control" formControlName="captchaCode" />
     </div>
 
     <div *ngIf="errorMessage" class="alert alert-danger">
