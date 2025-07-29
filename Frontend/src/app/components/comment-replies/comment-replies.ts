@@ -1,17 +1,8 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { CommentForm } from '../comment-form/comment-form';
-
-interface Reply {
-  id: number;
-  userName: string;
-  email: string;
-  homePage?: string;
-  text: string;
-  createdAt: string;
-  repliesCount: number; // 👈 добавим это поле в API
-}
+import { Reply } from '../../models/comment.model';
 
 @Component({
   selector: 'app-comment-replies',
@@ -22,6 +13,7 @@ interface Reply {
 })
 export class CommentReplies implements OnInit {
   @Input() commentId!: number;
+  @Output() textFileRequested = new EventEmitter<number>();
 
   replies: Reply[] = [];
   loadedReplies: { [id: number]: Reply[] } = {};
@@ -69,5 +61,9 @@ export class CommentReplies implements OnInit {
 
   showReplyForm(id: number): boolean {
     return this.replyFormVisible[id] ?? false;
+  }
+
+  onTextFileClick(fileId: number) {
+    this.textFileRequested.emit(fileId);
   }
 }

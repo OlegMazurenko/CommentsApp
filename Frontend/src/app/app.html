@@ -1,3 +1,22 @@
 <div class="container mt-4">
-  <app-comment-list></app-comment-list>
+  <app-comment-list (textFileRequested)="openTextFile($event)"></app-comment-list>
+</div>
+
+<!-- Shared Modal for Text File Preview -->
+<div class="modal fade" id="textFileModal" tabindex="-1" aria-labelledby="textFileModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="textFileModalLabel">Text File Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+          (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <pre *ngIf="selectedFileTextContent !== null; else loading">{{ selectedFileTextContent }}</pre>
+        <ng-template #loading>
+          <div class="text-center text-muted">Loading...</div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
 </div>

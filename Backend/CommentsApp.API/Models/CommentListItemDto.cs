@@ -9,4 +9,5 @@ public record CommentListItemDto
     public string Email { get; init; } = string.Empty;
     public string? HomePage { get; init; }
     public int ReplyCount { get; init; }
+    public List<UploadedFileDto> Files { get; set; } = [];
 }

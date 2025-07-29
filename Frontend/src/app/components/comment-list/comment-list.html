@@ -1,42 +1,63 @@
 <div class="container mt-4">
-  <button class="btn btn-success mb-3" (click)="toggleMainForm()">
-    {{ showMainForm() ? 'Hide Comment Form' : 'Add Comment' }}
-  </button>
-
-  <app-comment-form *ngIf="showMainForm()"></app-comment-form>
-
-  <h2>Comments</h2>
-  <div *ngFor="let comment of comments" class="card mb-3">
-    <div class="card-body">
-      <h5 class="card-title">{{ comment.userName }}</h5>
-      <h6 class="card-subtitle mb-2 text-muted">{{ comment.email }}</h6>
-      <p class="card-text" [innerHTML]="comment.text"></p>
-      <p class="card-subtitle text-muted">{{ comment.createdAt | date: 'short' }}</p>
-      <div class="mt-2">
-        <button class="btn btn-sm btn-outline-primary me-1" (click)="toggleReplies(comment.id)">
-          {{ selectedCommentId === comment.id ? 'Hide Replies' : ('Show Replies (' + comment.replyCount + ')') }}
-        </button>
-        <button class="btn btn-sm btn-outline-secondary" (click)="toggleReplyForm(comment.id)">
-          {{ replyFormsVisible[comment.id] ? 'Cancel Reply' : 'Reply' }}
-        </button>
-      </div>
-    </div>
-    <div *ngIf="selectedCommentId === comment.id" class="card-body border-top">
-      <app-comment-replies [commentId]="comment.id"></app-comment-replies>
-    </div>
-    <div *ngIf="replyFormsVisible[comment.id]" class="card-body border-top">
-      <app-comment-form [parentCommentId]="comment.id"></app-comment-form>
-    </div>
-  </div>
-
-  <div class="d-flex justify-content-between">
-    <button class="btn btn-secondary" (click)="prevPage()" [disabled]="currentPage === 1">
-      ← Previous
+    <button class="btn btn-success mb-3" (click)="toggleMainForm()">
+        {{ showMainForm() ? 'Hide Comment Form' : 'Add Comment' }}
     </button>
-    <span>Page {{ currentPage }}</span>
-    <button class="btn btn-secondary" (click)="nextPage()" [disabled]="isLastPage">
-      Next →
-    </button>
-  </div>
+    <app-comment-form *ngIf="showMainForm()"></app-comment-form>
+    <h2>Comments</h2>
+
+    <div *ngFor="let comment of comments" class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">{{ comment.userName }} ({{ comment.email }})</h5>
+            <p class="card-text" [innerHTML]="comment.text"></p>
+            <p class="card-subtitle mb-2 text-muted">{{ comment.createdAt | date: 'short' }}</p>
+
+            <div *ngIf="comment.files && comment.files.length > 0" class="mt-2">
+                <ng-container *ngFor="let file of comment.files">
+                    <a *ngIf="file.contentType.startsWith('image/')"
+                        [href]="'https://localhost:5001/api/files/' + file.id"
+                        [attr.data-lightbox]="'comment-' + comment.id" [attr.data-title]="file.fileName"
+                        style="margin-right: 8px;">
+                        <img [src]="'https://localhost:5001/api/files/' + file.id" [alt]="file.fileName"
+                            style="max-height: 100px;" />
+                    </a>
+
+                    <a *ngIf="file.contentType === 'text/plain'" href="javascript:void(0)"
+                        (click)="onTextFileClick(file.id)" class="btn btn-sm btn-outline-secondary me-2">
+                        {{ file.fileName }}
+                    </a>
+                </ng-container>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-sm btn-outline-secondary me-2" (click)="toggleReplyForm(comment.id)">
+                    {{ replyFormsVisible[comment.id] ? 'Cancel' : 'Reply' }}
+                </button>
+
+                <button *ngIf="comment.replyCount > 0" class="btn btn-sm btn-outline-primary"
+                    (click)="toggleReplies(comment.id)">
+                    {{ selectedCommentId === comment.id ? 'Hide Replies' : 'Show Replies (' + comment.replyCount + ')'
+                    }}
+                </button>
+            </div>
+
+            <div *ngIf="replyFormsVisible[comment.id]" class="mt-3">
+                <app-comment-form [parentCommentId]="comment.id"></app-comment-form>
+            </div>
+
+            <div *ngIf="selectedCommentId === comment.id" class="mt-3">
+                <app-comment-replies [commentId]="comment.id"
+                    (textFileRequested)="onTextFileClick($event)"></app-comment-replies>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <button class="btn btn-secondary" (click)="prevPage()" [disabled]="currentPage === 1">
+            ← Previous
+        </button>
+        <span>Page {{ currentPage }}</span>
+        <button class="btn btn-secondary" (click)="nextPage()" [disabled]="isLastPage">
+            Next →
+        </button>
+    </div>
 </div>
-

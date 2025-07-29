@@ -127,6 +127,7 @@ public class CommentsController : ControllerBase
 
         var comments = await query
             .Include(c => c.Replies)
+            .Include(c => c.Files)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -139,7 +140,13 @@ public class CommentsController : ControllerBase
             UserName = c.User.UserName,
             Email = c.User.Email,
             HomePage = c.User.HomePage,
-            ReplyCount = c.Replies.Count
+            ReplyCount = c.Replies.Count,
+            Files = c.Files.Select(f => new UploadedFileDto
+            {
+                Id = f.Id,
+                FileName = f.FileName,
+                ContentType = f.ContentType
+            }).ToList()
         });
 
         var isLastPage = comments.Count < pageSize;
@@ -178,7 +185,13 @@ public class CommentsController : ControllerBase
                 UserName = r.User.UserName,
                 Email = r.User.Email,
                 HomePage = r.User.HomePage,
-                RepliesCount = r.Replies.Count
+                RepliesCount = r.Replies.Count,
+                Files = r.Files.Select(f => new UploadedFileDto
+                {
+                    Id = f.Id,
+                    FileName = f.FileName,
+                    ContentType = f.ContentType
+                }).ToList()
             })
             .ToList();
 

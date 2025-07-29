@@ -7,6 +7,26 @@
         <p class="card-text" [innerHTML]="reply.text"></p>
         <small class="text-muted">{{ reply.createdAt | date: 'short' }}</small>
 
+        <div *ngIf="reply.files && reply.files.length > 0" class="mt-2">
+          <ng-container *ngFor="let file of reply.files">
+            <a *ngIf="file.contentType.startsWith('image/')"
+               [href]="'https://localhost:5001/api/files/' + file.id"
+               [attr.data-lightbox]="'reply-' + reply.id"
+               [attr.data-title]="file.fileName"
+               style="margin-right: 8px;">
+              <img [src]="'https://localhost:5001/api/files/' + file.id"
+                   [alt]="file.fileName"
+                   style="max-height: 100px;" />
+            </a>
+
+            <a *ngIf="file.contentType === 'text/plain'" href="javascript:void(0)"
+               (click)="onTextFileClick(file.id)"
+               class="btn btn-sm btn-outline-secondary me-2">
+              {{ file.fileName }}
+            </a>
+          </ng-container>
+        </div>
+
         <div class="mt-2">
           <button class="btn btn-sm btn-outline-secondary me-2" (click)="toggleReplyForm(reply.id)">
             {{ showReplyForm(reply.id) ? 'Cancel Reply' : 'Reply' }}
@@ -25,6 +45,7 @@
 
         <app-comment-replies *ngIf="showReplies(reply.id)"
                              [commentId]="reply.id"
+                             (textFileRequested)="onTextFileClick($event)"
                              class="mt-2"></app-comment-replies>
       </div>
     </div>

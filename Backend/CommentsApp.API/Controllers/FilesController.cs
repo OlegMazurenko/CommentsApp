@@ -24,4 +24,18 @@ public class FilesController : ControllerBase
             ? NotFound()
             : File(file.Content, file.ContentType, file.FileName);
     }
+
+    [HttpGet("{id}/text")]
+    public async Task<IActionResult> GetTextContent(int id)
+    {
+        var file = await _context.FileUploads.FindAsync(id);
+
+        if (file == null || file.ContentType != "text/plain")
+        {
+            return NotFound();
+        }
+
+        var content = System.Text.Encoding.UTF8.GetString(file.Content);
+        return Content(content, "text/plain");
+    }
 }
