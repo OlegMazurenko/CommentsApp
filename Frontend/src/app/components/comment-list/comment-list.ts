@@ -14,8 +14,11 @@ import { CommentListItem } from '../../models/comment.model';
 export class CommentList {
   comments: CommentListItem[] = [];
   currentPage = 1;
-  sortField = 'created';
-  sortOrder: 'asc' | 'desc' = 'desc';
+
+  // Поля сортировки
+  sortField: 'user' | 'email' | 'date' = 'date';
+  sortDirection: 'asc' | 'desc' = 'desc';
+
   selectedCommentId: number | null = null;
   selectedReplyFormId: number | null = null;
   replyFormsVisible: { [commentId: number]: boolean } = {};
@@ -29,7 +32,8 @@ export class CommentList {
   }
 
   loadComments() {
-    const url = `https://localhost:5001/api/comments?page=${this.currentPage}&sortField=${this.sortField}&sortOrder=${this.sortOrder}`;
+    const sort = `${this.sortField}_${this.sortDirection}`;
+    const url = `https://localhost:5001/api/comments?page=${this.currentPage}&sort=${sort}`;
     this.http.get<{ comments: CommentListItem[]; isLastPage: boolean }>(url)
       .subscribe(result => {
         this.comments = result.comments;
@@ -37,12 +41,12 @@ export class CommentList {
       });
   }
 
-  changeSort(field: string) {
+  changeSort(field: 'user' | 'email' | 'date') {
     if (this.sortField === field) {
-      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortField = field;
-      this.sortOrder = 'asc';
+      this.sortDirection = 'asc';
     }
     this.loadComments();
   }

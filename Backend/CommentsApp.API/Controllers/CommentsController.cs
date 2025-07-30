@@ -120,6 +120,7 @@ public class CommentsController : ControllerBase
             "user_desc" => query.OrderByDescending(c => c.User.UserName),
             "email_asc" => query.OrderBy(c => c.User.Email),
             "email_desc" => query.OrderByDescending(c => c.User.Email),
+            "date_asc" => query.OrderBy(c => c.CreatedAt),
             _ => query.OrderByDescending(c => c.CreatedAt),
         };
 

@@ -4,7 +4,7 @@
       <div class="card-body">
         <h6 class="card-title">{{ reply.userName }}</h6>
         <h6 class="card-subtitle mb-2 text-muted">{{ reply.email }}</h6>
-        <p class="card-text" [innerHTML]="reply.text"></p>
+        <p class="card-text" [innerHTML]="reply.text" style="white-space: pre-wrap;"></p>
         <small class="text-muted">{{ reply.createdAt | date: 'short' }}</small>
 
         <div *ngIf="reply.files && reply.files.length > 0" class="mt-2">

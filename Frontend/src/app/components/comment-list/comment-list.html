@@ -3,12 +3,38 @@
         {{ showMainForm() ? 'Hide Comment Form' : 'Add Comment' }}
     </button>
     <app-comment-form *ngIf="showMainForm()"></app-comment-form>
+
+    <div class="mb-3 d-flex gap-2 align-items-center">
+        <span>Sort by:</span>
+
+        <button class="btn btn-sm btn-outline-primary"
+                [class.active]="sortField === 'user'"
+                (click)="changeSort('user')">
+            User Name
+            <span *ngIf="sortField === 'user'">({{ sortDirection }})</span>
+        </button>
+
+        <button class="btn btn-sm btn-outline-primary"
+                [class.active]="sortField === 'email'"
+                (click)="changeSort('email')">
+            Email
+            <span *ngIf="sortField === 'email'">({{ sortDirection }})</span>
+        </button>
+
+        <button class="btn btn-sm btn-outline-primary"
+                [class.active]="sortField === 'date'"
+                (click)="changeSort('date')">
+            Date
+            <span *ngIf="sortField === 'date'">({{ sortDirection }})</span>
+        </button>
+    </div>
+
     <h2>Comments</h2>
 
     <div *ngFor="let comment of comments" class="card mb-3">
         <div class="card-body">
             <h5 class="card-title">{{ comment.userName }} ({{ comment.email }})</h5>
-            <p class="card-text" [innerHTML]="comment.text"></p>
+            <p class="card-text" [innerHTML]="comment.text" style="white-space: pre-wrap;"></p>
             <p class="card-subtitle mb-2 text-muted">{{ comment.createdAt | date: 'short' }}</p>
 
             <div *ngIf="comment.files && comment.files.length > 0" class="mt-2">
@@ -35,8 +61,7 @@
 
                 <button *ngIf="comment.replyCount > 0" class="btn btn-sm btn-outline-primary"
                     (click)="toggleReplies(comment.id)">
-                    {{ selectedCommentId === comment.id ? 'Hide Replies' : 'Show Replies (' + comment.replyCount + ')'
-                    }}
+                    {{ selectedCommentId === comment.id ? 'Hide Replies' : 'Show Replies (' + comment.replyCount + ')' }}
                 </button>
             </div>
 

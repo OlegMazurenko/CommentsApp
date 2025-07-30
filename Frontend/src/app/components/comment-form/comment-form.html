@@ -1,53 +1,86 @@
 <div class="container mt-4">
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="mb-3">
-      <label for="userName" class="form-label">User Name</label>
-      <input id="userName" type="text" class="form-control" formControlName="userName" />
-    </div>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="mb-3">
+            <label for="userName" class="form-label">User Name <span class="text-danger">*</span></label>
+            <input id="userName" type="text" class="form-control" formControlName="userName" />
+            <div *ngIf="form.get('userName')?.invalid && form.get('userName')?.touched" class="text-danger">
+                User Name is required.
+            </div>
+        </div>
 
-    <div class="mb-3">
-      <label for="email" class="form-label">Email</label>
-      <input id="email" type="email" class="form-control" formControlName="email" />
-    </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+            <input id="email" type="email" class="form-control" formControlName="email" />
+            <div *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="text-danger">
+                Valid email is required.
+            </div>
+        </div>
 
-    <div class="mb-3">
-      <label for="homePage" class="form-label">Home Page (optional)</label>
-      <input id="homePage" type="text" class="form-control" formControlName="homePage" />
-    </div>
+        <div class="mb-3">
+            <label for="homePage" class="form-label">Home Page (optional)</label>
+            <input id="homePage" type="text" class="form-control" formControlName="homePage" />
+        </div>
 
-    <div class="mb-3">
-      <label for="text" class="form-label">Comment Text</label>
-      <textarea id="text" rows="4" class="form-control" formControlName="text"></textarea>
-    </div>
+        <div class="mb-3">
+            <label for="text" class="form-label">Comment Text <span class="text-danger">*</span></label>
 
-    <div class="mb-3">
-      <label for="files" class="form-label">Attach files (images or .txt)</label>
-      <input id="files" type="file" class="form-control" multiple (change)="onFileSelected($event)" />
-    </div>
+            <div class="btn-group mb-1" role="group">
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertTag('i')">[i]</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                    (click)="insertTag('strong')">[strong]</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                    (click)="insertTag('code')">[code]</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertLink()">[a]</button>
+            </div>
 
-    <div *ngIf="warnings.length > 0" class="alert alert-warning">
-      <ul class="mb-0">
-        <li *ngFor="let warning of warnings">{{ warning }}</li>
-      </ul>
-    </div>
+            <textarea id="text" rows="4" class="form-control" formControlName="text"></textarea>
 
-    <div class="mb-3">
-      <label class="form-label">CAPTCHA</label>
-      <div class="d-flex align-items-center">
-        <img [src]="captchaUrl" alt="CAPTCHA" style="height: 50px; margin-right: 1rem;" />
-        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="loadCaptcha()">Reload</button>
-      </div>
-    </div>
+            <div *ngIf="form.get('text')?.invalid && form.get('text')?.touched" class="text-danger">
+                Comment text is required.
+            </div>
 
-    <div class="mb-3">
-      <label for="captchaCode" class="form-label">Enter CAPTCHA Code</label>
-      <input id="captchaCode" type="text" class="form-control" formControlName="captchaCode" />
-    </div>
+            <div *ngIf="xhtmlError" class="text-danger mt-1">{{ xhtmlError }}</div>
+        </div>
 
-    <div *ngIf="errorMessage" class="alert alert-danger">
-      {{ errorMessage }}
-    </div>
+        <div class="mb-3">
+            <label for="files" class="form-label">Attach files (images or .txt)</label>
+            <input id="files" type="file" class="form-control" multiple (change)="onFileSelected($event)" />
+        </div>
 
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </form>
+        <div *ngIf="warnings.length > 0" class="alert alert-warning">
+            <ul class="mb-0">
+                <li *ngFor="let warning of warnings">{{ warning }}</li>
+            </ul>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">CAPTCHA</label>
+            <div class="d-flex align-items-center">
+                <img [src]="captchaUrl" alt="CAPTCHA" style="height: 50px; margin-right: 1rem;" />
+                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="loadCaptcha()">Reload</button>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="captchaCode" class="form-label">Enter CAPTCHA Code <span class="text-danger">*</span></label>
+            <input id="captchaCode" type="text" class="form-control" formControlName="captchaCode" />
+            <div *ngIf="form.get('captchaCode')?.invalid && form.get('captchaCode')?.touched" class="text-danger">
+                CAPTCHA code is required.
+            </div>
+        </div>
+
+        <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+
+        <div class="d-flex justify-content-between">
+            <button type="button" class="btn btn-outline-secondary" (click)="preview()">Preview</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+
+    <div *ngIf="previewText" class="card mt-3">
+        <div class="card-header">Preview</div>
+        <div class="card-body">
+            <div [innerHTML]="previewText" style="white-space: pre-wrap;"></div>
+        </div>
+    </div>
 </div>
