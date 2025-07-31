@@ -6,7 +6,7 @@ using SixLabors.Fonts;
 
 namespace CommentsApp.API.Services;
 
-public class CaptchaGenerator
+public class CaptchaGenerator : ICaptchaGenerator
 {
     private readonly Font _font;
 

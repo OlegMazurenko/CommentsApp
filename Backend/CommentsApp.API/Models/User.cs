@@ -7,5 +7,5 @@ public class User
     public string Email { get; set; } = default!;
     public string? HomePage { get; set; }
 
-    public List<Comment> Comments { get; set; } = new();
+    public ICollection<Comment> Comments { get; set; } = [];
 }

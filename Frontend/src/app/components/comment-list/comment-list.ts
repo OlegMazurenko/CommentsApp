@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Output, signal } from '@angular/core';
 import { CommonModule, DatePipe, NgIf, NgFor } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import * as signalR from '@microsoft/signalr';
+
 import { CommentForm } from '../comment-form/comment-form';
 import { CommentReplies } from '../comment-replies/comment-replies';
 import { CommentListItem } from '../../models/comment.model';
@@ -15,7 +17,6 @@ export class CommentList {
   comments: CommentListItem[] = [];
   currentPage = 1;
 
-  // Поля сортировки
   sortField: 'user' | 'email' | 'date' = 'date';
   sortDirection: 'asc' | 'desc' = 'desc';
 
@@ -27,8 +28,11 @@ export class CommentList {
 
   @Output() textFileRequested = new EventEmitter<number>();
 
+  newCommentReceived = false;
+
   constructor(private http: HttpClient) {
     this.loadComments();
+    this.setupSignalR();
   }
 
   loadComments() {
@@ -39,6 +43,27 @@ export class CommentList {
         this.comments = result.comments;
         this.isLastPage = result.isLastPage;
       });
+  }
+
+  setupSignalR(): void {
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl('https://localhost:5001/hubs/comments')
+      .withAutomaticReconnect()
+      .build();
+
+    connection.start()
+      .then(() => console.log('SignalR connected'))
+      .catch(err => console.error('SignalR connection error:', err));
+
+    connection.on('NewComment', (commentId: number) => {
+      console.log('New comment received via SignalR:', commentId);
+      this.newCommentReceived = true;
+    });
+  }
+
+  reloadNow(): void {
+    this.newCommentReceived = false;
+    this.loadComments();
   }
 
   changeSort(field: 'user' | 'email' | 'date') {

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -10,7 +10,7 @@ import { HttpClient } from '@angular/common/http';
   templateUrl: './comment-form.html',
   styleUrl: './comment-form.css'
 })
-export class CommentForm {
+export class CommentForm implements OnInit {
   @Input() parentCommentId?: number;
 
   form: FormGroup;
@@ -22,6 +22,7 @@ export class CommentForm {
   captchaUrl = '';
   captchaId = '';
   previewText = '';
+  showPreview = false;
 
   constructor(private fb: FormBuilder, private http: HttpClient) {
     this.form = this.fb.group({
@@ -31,8 +32,16 @@ export class CommentForm {
       text: ['', Validators.required],
       captchaCode: ['', Validators.required]
     });
+  }
 
+  ngOnInit(): void {
     this.loadCaptcha();
+
+    this.form.get('text')?.valueChanges.subscribe(value => {
+      if (this.showPreview) {
+        this.updatePreview(value);
+      }
+    });
   }
 
   loadCaptcha(): void {
@@ -117,14 +126,20 @@ export class CommentForm {
     });
   }
 
-  preview(): void {
-    this.previewText = this.form.value.text;
+  togglePreview(): void {
+    this.showPreview = !this.showPreview;
+    if (this.showPreview) {
+      this.updatePreview(this.form.value.text);
+    }
+  }
+
+  updatePreview(value: string): void {
+    this.previewText = value;
   }
 
   isValidXhtml(text: string): boolean {
     const allowedTags = ['a', 'code', 'i', 'strong'];
 
-    // Find all opening and closing tags
     const tagRegex = /<\/?([a-zA-Z0-9]+)(\s[^>]*)?>/g;
     let match: RegExpExecArray | null;
 
@@ -136,7 +151,6 @@ export class CommentForm {
         return false;
       }
 
-      // Check href and title for <a>
       if (tag === 'a' && match[0][1] !== '/') {
         const attrs = match[2] ?? '';
         if (!attrs.includes('href=') || !attrs.includes('title=')) {
@@ -146,7 +160,6 @@ export class CommentForm {
       }
     }
 
-    // Check the pairing of opening and closing tags
     const stack: string[] = [];
     const tags = [...text.matchAll(/<\/?([a-zA-Z0-9]+)(\s[^>]*)?>/g)];
 
@@ -217,12 +230,7 @@ export class CommentForm {
 
     this.http.post('https://localhost:5001/api/comments', formData).subscribe({
       next: () => {
-        this.form.reset();
-        this.selectedFiles = [];
-        this.previewText = '';
-        this.errorMessage = '';
-        this.xhtmlError = '';
-        this.loadCaptcha();
+        window.location.reload();
       },
       error: (error) => {
         this.errorMessage = 'Error submitting comment.';

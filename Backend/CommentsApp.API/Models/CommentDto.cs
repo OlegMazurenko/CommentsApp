@@ -9,5 +9,5 @@ public record CommentDto
     public int? ParentCommentId { get; init; }
     public Guid CaptchaId { get; init; }
     public string CaptchaCode { get; init; } = string.Empty;
-    public List<UploadedFileDto> Files { get; init; } = new();
+    public ICollection<UploadedFileDto> Files { get; init; } = [];
 }

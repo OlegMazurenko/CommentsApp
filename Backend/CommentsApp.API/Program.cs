@@ -13,9 +13,10 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy
-            .AllowAnyOrigin()
+            .WithOrigins("http://localhost:4200")
             .AllowAnyHeader()
             .AllowAnyMethod()
+            .AllowCredentials()
             .WithExposedHeaders("Content-Disposition");
     });
 });
@@ -30,9 +31,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
 
-builder.Services.AddScoped<HtmlSanitizer>();
-builder.Services.AddHostedService<FileProcessorQueue>();
-builder.Services.AddSingleton<CaptchaGenerator>();
+builder.Services.AddScoped<IHtmlSanitizer, HtmlSanitizer>();
+builder.Services.AddSingleton<FileProcessorQueue>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<FileProcessorQueue>());
+builder.Services.AddSingleton<ICaptchaGenerator, CaptchaGenerator>();
 
 var app = builder.Build();
 

@@ -4,7 +4,7 @@
     </button>
     <app-comment-form *ngIf="showMainForm()"></app-comment-form>
 
-    <div class="mb-3 d-flex gap-2 align-items-center">
+    <div class="mt-3 mb-3 d-flex gap-2 align-items-center">
         <span>Sort by:</span>
 
         <button class="btn btn-sm btn-outline-primary"
@@ -27,6 +27,12 @@
             Date
             <span *ngIf="sortField === 'date'">({{ sortDirection }})</span>
         </button>
+    </div>
+
+    <!-- New comment notification -->
+    <div *ngIf="newCommentReceived" class="alert alert-info d-flex justify-content-between align-items-center">
+        <div>New comment was added. <strong>Click to refresh</strong>.</div>
+        <button class="btn btn-sm btn-outline-primary" (click)="reloadNow()">Refresh</button>
     </div>
 
     <h2>Comments</h2>

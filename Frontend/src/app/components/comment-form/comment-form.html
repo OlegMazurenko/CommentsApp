@@ -22,27 +22,6 @@
         </div>
 
         <div class="mb-3">
-            <label for="text" class="form-label">Comment Text <span class="text-danger">*</span></label>
-
-            <div class="btn-group mb-1" role="group">
-                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertTag('i')">[i]</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary"
-                    (click)="insertTag('strong')">[strong]</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary"
-                    (click)="insertTag('code')">[code]</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertLink()">[a]</button>
-            </div>
-
-            <textarea id="text" rows="4" class="form-control" formControlName="text"></textarea>
-
-            <div *ngIf="form.get('text')?.invalid && form.get('text')?.touched" class="text-danger">
-                Comment text is required.
-            </div>
-
-            <div *ngIf="xhtmlError" class="text-danger mt-1">{{ xhtmlError }}</div>
-        </div>
-
-        <div class="mb-3">
             <label for="files" class="form-label">Attach files (images or .txt)</label>
             <input id="files" type="file" class="form-control" multiple (change)="onFileSelected($event)" />
         </div>
@@ -71,13 +50,36 @@
 
         <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
 
+        <div class="mb-3">
+            <label for="text" class="form-label">Comment Text <span class="text-danger">*</span></label>
+
+            <div class="btn-group mb-1 px-1" role="group">
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertTag('i')">[i]</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                    (click)="insertTag('strong')">[strong]</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                    (click)="insertTag('code')">[code]</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertLink()">[a]</button>
+            </div>
+
+            <textarea id="text" rows="4" class="form-control" formControlName="text"></textarea>
+
+            <div *ngIf="form.get('text')?.invalid && form.get('text')?.touched" class="text-danger">
+                Comment text is required.
+            </div>
+
+            <div *ngIf="xhtmlError" class="text-danger mt-1">{{ xhtmlError }}</div>
+        </div>
+
         <div class="d-flex justify-content-between">
-            <button type="button" class="btn btn-outline-secondary" (click)="preview()">Preview</button>
+            <button type="button" class="btn btn-outline-secondary" (click)="togglePreview()">
+                {{ showPreview ? 'Hide Preview' : 'Preview' }}
+            </button>
             <button type="submit" class="btn btn-primary">Submit</button>
         </div>
     </form>
 
-    <div *ngIf="previewText" class="card mt-3">
+    <div *ngIf="showPreview" class="card mt-3">
         <div class="card-header">Preview</div>
         <div class="card-body">
             <div [innerHTML]="previewText" style="white-space: pre-wrap;"></div>

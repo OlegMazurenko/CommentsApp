@@ -1,6 +1,6 @@
 ﻿namespace CommentsApp.API.Services;
 
-public class HtmlSanitizer
+public class HtmlSanitizer : IHtmlSanitizer
 {
     public string Sanitize(string input)
     {

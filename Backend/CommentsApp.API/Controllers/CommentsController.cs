@@ -6,6 +6,7 @@ using CommentsApp.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -15,18 +16,20 @@ namespace CommentsApp.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CommentsController : ControllerBase
+public class CommentsController(AppDbContext context,
+    IHtmlSanitizer sanitizer,
+    IHubContext<CommentsHub> hubContext,
+    IMemoryCache cache,
+    FileProcessorQueue fileProcessorQueue)
+    : ControllerBase
 {
-    private readonly AppDbContext _context;
-    private readonly HtmlSanitizer _sanitizer;
-    private readonly IHubContext<CommentsHub> _hubContext;
+    private static readonly IList<string> _commentCacheKeys = [];
 
-    public CommentsController(AppDbContext context, HtmlSanitizer sanitizer, IHubContext<CommentsHub> hubContext)
-    {
-        _context = context;
-        _sanitizer = sanitizer;
-        _hubContext = hubContext;
-    }
+    private readonly AppDbContext _context = context;
+    private readonly IHtmlSanitizer _sanitizer = sanitizer;
+    private readonly IHubContext<CommentsHub> _hubContext = hubContext;
+    private readonly IMemoryCache _cache = cache;
+    private readonly FileProcessorQueue _fileProcessorQueue = fileProcessorQueue;
 
     [HttpPost]
     public async Task<IActionResult> PostComment([FromForm] CommentDto dto)
@@ -102,6 +105,17 @@ public class CommentsController : ControllerBase
 
         _context.Comments.Add(comment);
         await _context.SaveChangesAsync();
+        _fileProcessorQueue.Enqueue(comment);
+
+        lock (_commentCacheKeys)
+        {
+            foreach (var key in _commentCacheKeys)
+            {
+                _cache.Remove(key);
+            }
+            _commentCacheKeys.Clear();
+        }
+
         await _hubContext.Clients.All.SendAsync("NewComment", comment.Id);
 
         return Ok(comment.Id);
@@ -110,6 +124,14 @@ public class CommentsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetComments(int page = 1, string sort = "date_desc")
     {
+        const int pageSize = 25;
+        var cacheKey = $"comments:page:{page}:sort:{sort}";
+
+        if (_cache.TryGetValue(cacheKey, out object? cached) && cached is not null)
+        {
+            return Ok(cached);
+        }
+
         var query = _context.Comments
             .Include(c => c.User)
             .Where(c => c.ParentCommentId == null);
@@ -124,14 +146,18 @@ public class CommentsController : ControllerBase
             _ => query.OrderByDescending(c => c.CreatedAt),
         };
 
-        const int pageSize = 25;
-
-        var comments = await query
+        var commentEntities = await query
             .Include(c => c.Replies)
             .Include(c => c.Files)
             .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Take(pageSize + 1)
             .ToListAsync();
+
+        var isLastPage = commentEntities.Count <= pageSize;
+
+        var comments = commentEntities
+            .Take(pageSize)
+            .ToList();
 
         var result = comments.Select(c => new CommentListItemDto
         {
@@ -148,15 +174,25 @@ public class CommentsController : ControllerBase
                 FileName = f.FileName,
                 ContentType = f.ContentType
             }).ToList()
-        });
+        }).ToList();
 
-        var isLastPage = comments.Count < pageSize;
-
-        return Ok(new
+        var response = new
         {
             comments = result,
             isLastPage
-        });
+        };
+
+        _cache.Set(cacheKey, response, TimeSpan.FromSeconds(60));
+
+        lock (_commentCacheKeys)
+        {
+            if (!_commentCacheKeys.Contains(cacheKey))
+            {
+                _commentCacheKeys.Add(cacheKey);
+            }
+        }
+
+        return Ok(response);
     }
 
     [HttpGet("{id}/replies")]

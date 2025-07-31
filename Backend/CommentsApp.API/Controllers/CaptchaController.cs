@@ -8,16 +8,10 @@ namespace CommentsApp.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CaptchaController : ControllerBase
+public class CaptchaController(ICaptchaGenerator generator, AppDbContext context) : ControllerBase
 {
-    private readonly CaptchaGenerator _generator;
-    private readonly AppDbContext _context;
-
-    public CaptchaController(CaptchaGenerator generator, AppDbContext context)
-    {
-        _generator = generator;
-        _context = context;
-    }
+    private readonly ICaptchaGenerator _generator = generator;
+    private readonly AppDbContext _context = context;
 
     [HttpGet]
     public async Task<IActionResult> Generate()
@@ -29,7 +23,7 @@ public class CaptchaController : ControllerBase
         {
             Id = id,
             Code = code,
-            Expiration = DateTime.UtcNow.AddDays(30) // for testing purposes
+            Expiration = DateTime.UtcNow.AddMinutes(5)
         });
 
         await _context.SaveChangesAsync();

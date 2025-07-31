@@ -8,6 +8,6 @@ public record CommentTreeDto
     public string UserName { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
     public string? HomePage { get; init; }
-    public List<FileMetaDto> Files { get; init; } = new();
-    public List<CommentTreeDto> Replies { get; init; } = new();
+    public IEnumerable<FileMetaDto> Files { get; init; } = [];
+    public IEnumerable<CommentTreeDto> Replies { get; init; } = [];
 }

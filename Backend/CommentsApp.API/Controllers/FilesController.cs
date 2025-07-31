@@ -6,14 +6,9 @@ namespace CommentsApp.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class FilesController : ControllerBase
+public class FilesController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
-
-    public FilesController(AppDbContext context)
-    {
-        _context = context;
-    }
+    private readonly AppDbContext _context = context;
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)

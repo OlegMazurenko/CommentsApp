@@ -9,5 +9,5 @@ public record ReplyDto
     public string Text { get; init; } = string.Empty;
     public DateTime CreatedAt { get; init; }
     public int RepliesCount { get; init; }
-    public List<UploadedFileDto> Files { get; set; } = [];
+    public IEnumerable<UploadedFileDto> Files { get; set; } = [];
 }
