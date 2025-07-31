@@ -12,6 +12,8 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
+using System.Text.RegularExpressions;
+
 namespace CommentsApp.API.Controllers;
 
 [ApiController]
@@ -34,6 +36,13 @@ public class CommentsController(AppDbContext context,
     [HttpPost]
     public async Task<IActionResult> PostComment([FromForm] CommentDto dto)
     {
+        var validationErrors = ValidateCommentDto(dto);
+
+        if (validationErrors.Count != 0)
+        {
+            return BadRequest(string.Join("; ", validationErrors));
+        }
+
         var captcha = await _context.Captchas.FindAsync(dto.CaptchaId);
 
         if (captcha == null || captcha.Code != dto.CaptchaCode || captcha.Expiration < DateTime.UtcNow)
@@ -85,7 +94,9 @@ public class CommentsController(AppDbContext context,
             }
 
             if (fileDto.ContentType == "text/plain" && content.Length > 100_000)
+            {
                 return BadRequest("Text file too large");
+            }
 
             if (fileDto.ContentType.StartsWith("image/"))
             {
@@ -281,5 +292,43 @@ public class CommentsController(AppDbContext context,
                 .Select(BuildCommentTree)
                 .ToList()
         };
+    }
+
+    private static List<string> ValidateCommentDto(CommentDto dto)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(dto.UserName) || !IsAlphaNumeric(dto.UserName))
+        {
+            errors.Add("User Name must contain only Latin letters and digits.");
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Email) || !IsValidEmail(dto.Email))
+        {
+            errors.Add("Invalid Email format.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.HomePage) && !IsValidUrl(dto.HomePage))
+        {
+            errors.Add("Invalid Home Page URL.");
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.CaptchaCode) || !IsAlphaNumeric(dto.CaptchaCode))
+        {
+            errors.Add("CAPTCHA code must contain only Latin letters and digits.");
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Text))
+        {
+            errors.Add("Comment text is required.");
+
+            return errors;
+        }
+
+        return errors;
+
+        bool IsAlphaNumeric(string input) => Regex.IsMatch(input, @"^[a-zA-Z0-9]+$");
+        bool IsValidEmail(string input) => Regex.IsMatch(input, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        bool IsValidUrl(string input) => Uri.TryCreate(input, UriKind.Absolute, out _);
     }
 }
