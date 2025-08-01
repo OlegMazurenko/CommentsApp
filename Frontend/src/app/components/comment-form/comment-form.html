@@ -22,7 +22,7 @@
         </div>
 
         <div class="mb-3">
-            <label for="files" class="form-label">Attach files (images or .txt)</label>
+            <label for="files" class="form-label">Attach files (.jpeg, .png, .gif, .txt)</label>
             <input id="files" type="file" class="form-control" multiple (change)="onFileSelected($event)" />
         </div>
 
@@ -48,7 +48,12 @@
             </div>
         </div>
 
-        <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+        <div *ngIf="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+            <div *ngIf="submitErrorDetail" class="small mt-1 text-break text-muted">
+                {{ submitErrorDetail }}
+            </div>
+        </div>
 
         <div class="mb-3">
             <label for="text" class="form-label">Comment Text <span class="text-danger">*</span></label>
@@ -72,10 +77,14 @@
         </div>
 
         <div class="d-flex justify-content-between">
-            <button type="button" class="btn btn-outline-secondary" (click)="togglePreview()">
+            <button type="button" class="btn btn-outline-secondary" (click)="togglePreview()" [disabled]="isSubmitting">
                 {{ showPreview ? 'Hide Preview' : 'Preview' }}
             </button>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"
+                    aria-hidden="true"></span>
+                Submit
+            </button>
         </div>
     </form>
 

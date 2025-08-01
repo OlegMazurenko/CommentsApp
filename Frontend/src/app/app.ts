@@ -19,7 +19,7 @@ export class App {
   openTextFile(fileId: number) {
     this.selectedFileTextContent = null;
 
-    this.http.get(`https://localhost:5001/api/files/${fileId}/text`, {
+    this.http.get(`/api/files/${fileId}/text`, {
       responseType: 'text'
     }).subscribe({
       next: (text) => {

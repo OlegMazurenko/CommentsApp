@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-comment-form',
@@ -18,13 +19,14 @@ export class CommentForm implements OnInit {
   warnings: string[] = [];
   errorMessage = '';
   xhtmlError = '';
-
+  isSubmitting = false;
+  submitErrorDetail = '';
   captchaUrl = '';
   captchaId = '';
   previewText = '';
   showPreview = false;
 
-  constructor(private fb: FormBuilder, private http: HttpClient) {
+  constructor(private fb: FormBuilder, private http: HttpClient, private cdRef: ChangeDetectorRef) {
     this.form = this.fb.group({
       userName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -45,7 +47,7 @@ export class CommentForm implements OnInit {
   }
 
   loadCaptcha(): void {
-    this.http.get('https://localhost:5001/api/captcha', {
+    this.http.get('/api/captcha', {
       responseType: 'blob',
       observe: 'response'
     }).subscribe({
@@ -57,6 +59,7 @@ export class CommentForm implements OnInit {
         const blob = response.body;
         if (blob) {
           this.captchaUrl = URL.createObjectURL(blob);
+          this.cdRef.detectChanges();
         }
       },
       error: error => console.error('Failed to load CAPTCHA:', error)
@@ -73,16 +76,16 @@ export class CommentForm implements OnInit {
     for (const file of Array.from(input.files)) {
       if (file.type === 'text/plain') {
         if (file.size > 100_000) {
-          this.warnings.push(`${file.name} is too large (max 100KB).`);
+          this.warnings.push(`${file.name} exceeds the limit of 100KB and will be ignored.`);
           continue;
         }
       } else if (file.type.startsWith('image/')) {
         if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-          this.warnings.push(`${file.name} is not a supported image format.`);
+          this.warnings.push(`${file.name} is not a supported image format and will be ignored.`);
           continue;
         }
       } else {
-        this.warnings.push(`${file.name} is not a supported file type.`);
+        this.warnings.push(`${file.name} is not a supported file type and will be ignored.`);
         continue;
       }
 
@@ -203,6 +206,11 @@ export class CommentForm implements OnInit {
       return;
     }
 
+    this.errorMessage = '';
+    this.submitErrorDetail = '';
+    this.isSubmitting = true;
+    this.cdRef.detectChanges();
+
     const formData = new FormData();
     formData.append('userName', this.form.value.userName);
     formData.append('email', this.form.value.email);
@@ -228,14 +236,16 @@ export class CommentForm implements OnInit {
 
     await Promise.all(fileReadPromises);
 
-    this.http.post('https://localhost:5001/api/comments', formData).subscribe({
+    this.http.post('/api/comments', formData).subscribe({
       next: () => {
         window.location.reload();
       },
       error: (error) => {
-        this.errorMessage = 'Error submitting comment.';
-        console.error(error);
+        this.errorMessage = 'Error submitting comment';
+        this.submitErrorDetail = error?.error ?? '';
+        this.isSubmitting = false;
         this.loadCaptcha();
+        this.cdRef.detectChanges();
       }
     });
   }

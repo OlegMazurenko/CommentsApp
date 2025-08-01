@@ -24,11 +24,11 @@ export class CommentList {
   selectedReplyFormId: number | null = null;
   replyFormsVisible: { [commentId: number]: boolean } = {};
   showMainForm = signal(false);
+  newCommentReceived = signal(false);
   isLastPage = false;
+  isLoading = false;
 
   @Output() textFileRequested = new EventEmitter<number>();
-
-  newCommentReceived = false;
 
   constructor(private http: HttpClient) {
     this.loadComments();
@@ -36,18 +36,28 @@ export class CommentList {
   }
 
   loadComments() {
+    this.isLoading = true;
+
     const sort = `${this.sortField}_${this.sortDirection}`;
-    const url = `https://localhost:5001/api/comments?page=${this.currentPage}&sort=${sort}`;
+    const url = `/api/comments?page=${this.currentPage}&sort=${sort}`;
     this.http.get<{ comments: CommentListItem[]; isLastPage: boolean }>(url)
-      .subscribe(result => {
-        this.comments = result.comments;
-        this.isLastPage = result.isLastPage;
+      .subscribe({
+        next: result => {
+          this.comments = result.comments;
+          this.isLastPage = result.isLastPage;
+        },
+        error: error => {
+          console.error('Failed to load comments:', error);
+        },
+        complete: () => {
+          this.isLoading = false;
+        }
       });
   }
 
   setupSignalR(): void {
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl('https://localhost:5001/hubs/comments')
+      .withUrl('/hubs/comments')
       .withAutomaticReconnect()
       .build();
 
@@ -57,12 +67,12 @@ export class CommentList {
 
     connection.on('NewComment', (commentId: number) => {
       console.log('New comment received via SignalR:', commentId);
-      this.newCommentReceived = true;
+      this.newCommentReceived.set(true);
     });
   }
 
   reloadNow(): void {
-    this.newCommentReceived = false;
+    this.newCommentReceived.set(false);
     this.loadComments();
   }
 

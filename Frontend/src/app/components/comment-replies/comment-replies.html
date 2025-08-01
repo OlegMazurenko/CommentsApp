@@ -10,11 +10,11 @@
         <div *ngIf="reply.files && reply.files.length > 0" class="mt-2">
           <ng-container *ngFor="let file of reply.files">
             <a *ngIf="file.contentType.startsWith('image/')"
-               [href]="'https://localhost:5001/api/files/' + file.id"
+               [href]="'/api/files/' + file.id"
                [attr.data-lightbox]="'reply-' + reply.id"
                [attr.data-title]="file.fileName"
                style="margin-right: 8px;">
-              <img [src]="'https://localhost:5001/api/files/' + file.id"
+              <img [src]="'/api/files/' + file.id"
                    [alt]="file.fileName"
                    style="max-height: 100px;" />
             </a>

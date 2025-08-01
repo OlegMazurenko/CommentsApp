@@ -27,7 +27,7 @@ export class CommentReplies implements OnInit {
   }
 
   loadReplies(parentId: number): void {
-    this.http.get<Reply[]>(`https://localhost:5001/api/comments/${parentId}/replies`)
+    this.http.get<Reply[]>(`/api/comments/${parentId}/replies`)
       .subscribe({
         next: res => {
           if (parentId === this.commentId) {
