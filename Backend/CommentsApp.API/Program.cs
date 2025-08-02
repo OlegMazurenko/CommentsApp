@@ -1,6 +1,7 @@
 using CommentsApp.API.Data;
 using CommentsApp.API.Hubs;
 using CommentsApp.API.Services;
+using CommentsApp.API.Services.Interfaces;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -31,10 +32,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
 
-builder.Services.AddScoped<IHtmlSanitizer, HtmlSanitizer>();
 builder.Services.AddSingleton<FileProcessorQueue>();
+builder.Services.AddScoped<ICaptchaService, CaptchaService>();
+builder.Services.AddScoped<IHtmlSanitizer, HtmlSanitizer>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<ICommentValidator, CommentValidator>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<ICacheService, CacheService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<FileProcessorQueue>());
-builder.Services.AddSingleton<ICaptchaGenerator, CaptchaGenerator>();
 
 var app = builder.Build();
 

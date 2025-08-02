@@ -1,4 +1,6 @@
-﻿namespace CommentsApp.API.Services;
+﻿using CommentsApp.API.Services.Interfaces;
+
+namespace CommentsApp.API.Services;
 
 public class HtmlSanitizer : IHtmlSanitizer
 {

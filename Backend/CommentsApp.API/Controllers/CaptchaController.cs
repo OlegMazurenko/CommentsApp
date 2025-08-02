@@ -1,6 +1,6 @@
 ﻿using CommentsApp.API.Data;
 using CommentsApp.API.Models;
-using CommentsApp.API.Services;
+using CommentsApp.API.Services.Interfaces;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,9 +8,9 @@ namespace CommentsApp.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CaptchaController(ICaptchaGenerator generator, AppDbContext context) : ControllerBase
+public class CaptchaController(ICaptchaService generator, AppDbContext context) : ControllerBase
 {
-    private readonly ICaptchaGenerator _generator = generator;
+    private readonly ICaptchaService _generator = generator;
     private readonly AppDbContext _context = context;
 
     [HttpGet]
