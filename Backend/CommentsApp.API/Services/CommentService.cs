@@ -42,8 +42,6 @@ public class CommentService(AppDbContext context,
             throw new InvalidOperationException("Invalid or expired CAPTCHA");
         }
 
-        var user = await _userService.GetOrCreateUserAsync(dto.Email, dto.UserName, dto.HomePage);
-
         var parentComment = dto.ParentCommentId.HasValue
             ? await _context.Comments.FindAsync(dto.ParentCommentId.Value)
             : null;
@@ -52,6 +50,8 @@ public class CommentService(AppDbContext context,
         {
             throw new InvalidOperationException("Parent comment not found");
         }
+
+        var user = await _userService.PrepareUserAsync(dto.Email, dto.UserName, dto.HomePage);
 
         var comment = new Comment
         {

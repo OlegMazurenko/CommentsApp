@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Output, signal } from '@angular/core';
-import { CommonModule, DatePipe, NgIf, NgFor } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
 
@@ -10,7 +10,7 @@ import { CommentListItem } from '../../models/comment.model';
 @Component({
   selector: 'app-comment-list',
   standalone: true,
-  imports: [CommonModule, NgIf, NgFor, DatePipe, CommentForm, CommentReplies],
+  imports: [CommonModule, DatePipe, CommentForm, CommentReplies],
   templateUrl: './comment-list.html'
 })
 export class CommentList {

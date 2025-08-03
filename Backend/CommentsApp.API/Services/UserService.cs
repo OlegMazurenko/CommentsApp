@@ -10,23 +10,42 @@ public class UserService(AppDbContext context) : IUserService
 {
     private readonly AppDbContext _context = context;
 
-    public async Task<User> GetOrCreateUserAsync(string email, string userName, string? homePage)
+    public async Task<User> PrepareUserAsync(string email, string userName, string? homePage)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-        if (user != null)
+        if (user is null)
         {
+            user = new User
+            {
+                Email = email,
+                UserName = userName,
+                HomePage = homePage
+            };
+
+            _context.Users.Add(user);
+
             return user;
         }
 
-        user = new User
-        {
-            Email = email,
-            UserName = userName,
-            HomePage = homePage
-        };
+        var updated = false;
 
-        _context.Users.Add(user);
+        if (user.UserName != userName)
+        {
+            user.UserName = userName;
+            updated = true;
+        }
+
+        if (user.HomePage != homePage)
+        {
+            user.HomePage = homePage;
+            updated = true;
+        }
+
+        if (updated)
+        {
+            _context.Users.Update(user);
+        }
 
         return user;
     }
