@@ -8,8 +8,7 @@ import { ChangeDetectorRef } from '@angular/core';
   selector: 'app-comment-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './comment-form.html',
-  styleUrl: './comment-form.css'
+  templateUrl: './comment-form.html'
 })
 export class CommentForm implements OnInit {
   @Input() parentCommentId?: number;

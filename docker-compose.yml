@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: comments-mssql
+    environment:
+      SA_PASSWORD: "Your_password123"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+  backend:
+    build:
+      context: ./Backend
+    container_name: comments-backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mssql
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: "Server=mssql;Database=CommentsDb;User=sa;Password=Your_password123;TrustServerCertificate=true"
+
+  frontend:
+    build:
+      context: ./Frontend
+    container_name: comments-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  mssql_data:

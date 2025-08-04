@@ -1,6 +1,8 @@
 ﻿using CommentsApp.API.Data;
 using CommentsApp.API.Services.Interfaces;
 
+using Microsoft.EntityFrameworkCore;
+
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
@@ -16,14 +18,8 @@ public class CaptchaService(AppDbContext context) : ICaptchaService
     public (byte[] ImageBytes, string Code) GenerateCaptcha()
     {
         var fontCollection = new FontCollection();
-        fontCollection.AddSystemFonts();
-
-        var fontFamily = fontCollection.TryGet("Arial", out var arialFamily)
-            ? arialFamily
-            : fontCollection.Families.First();
-
+        var fontFamily = fontCollection.Add("Fonts/arial.ttf");
         var font = fontFamily.CreateFont(24, FontStyle.Bold);
-
         var code = Guid.NewGuid().ToString("N")[..6].ToUpper();
         using var image = new Image<Rgba32>(120, 40);
 
@@ -41,7 +37,9 @@ public class CaptchaService(AppDbContext context) : ICaptchaService
 
     public async Task<bool> ValidateCaptchaAsync(Guid id, string code)
     {
-        var captcha = await _context.Captchas.FindAsync(id);
+        var captcha = await _context.Captchas
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id);
 
         return captcha != null && captcha.Code == code && captcha.Expiration >= DateTime.UtcNow;
     }

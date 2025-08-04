@@ -5,16 +5,16 @@ export default defineConfig({
   plugins: [angular()],
   server: {
     host: '0.0.0.0',
-    port: 4200,
+    port: 8080,
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'https://localhost:5001',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false
       },
       '/hubs': {
-        target: 'https://localhost:5001',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
         ws: true

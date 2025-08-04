@@ -1,7 +1,8 @@
 import 'zone.js';
 import './styles.css';
+//import './assets/lightbox2/custom-lightbox.min.css';
 
-import 'lightbox2/dist/css/lightbox.min.css';
+//import 'lightbox2/dist/css/lightbox.min.css';
 import lightbox from 'lightbox2';
 
 import * as bootstrap from 'bootstrap';

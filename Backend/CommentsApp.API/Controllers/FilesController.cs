@@ -1,6 +1,7 @@
 ﻿using CommentsApp.API.Data;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CommentsApp.API.Controllers;
 
@@ -13,7 +14,9 @@ public class FilesController(AppDbContext context) : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
     {
-        var file = await _context.FileUploads.FindAsync(id);
+        var file = await _context.FileUploads
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f => f.Id == id);
 
         return file == null
             ? NotFound()
@@ -23,7 +26,9 @@ public class FilesController(AppDbContext context) : ControllerBase
     [HttpGet("{id}/text")]
     public async Task<IActionResult> GetTextContent(int id)
     {
-        var file = await _context.FileUploads.FindAsync(id);
+        var file = await _context.FileUploads
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f => f.Id == id);
 
         if (file == null || file.ContentType != "text/plain")
         {

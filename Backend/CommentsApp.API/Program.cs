@@ -1,26 +1,19 @@
 using CommentsApp.API.Data;
 using CommentsApp.API.Hubs;
+using CommentsApp.API.Models.Options;
 using CommentsApp.API.Services;
 using CommentsApp.API.Services.Interfaces;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using HtmlSanitizer = CommentsApp.API.Services.HtmlSanitizer;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy
-            .WithOrigins("http://localhost:4200")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials()
-            .WithExposedHeaders("Content-Disposition");
-    });
-});
+builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection(FrontendOptions.SectionName));
+
+builder.Services.AddCors();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -46,7 +39,19 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors();
+
+var frontendOptions = app.Services.GetRequiredService<IOptions<FrontendOptions>>().Value;
+
+app.UseCors(policy =>
+{
+    policy
+        .WithOrigins(frontendOptions.Url)
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials()
+        .WithExposedHeaders("Content-Disposition");
+});
+
 app.UseHttpsRedirection();
 app.UseAuthorization();
 

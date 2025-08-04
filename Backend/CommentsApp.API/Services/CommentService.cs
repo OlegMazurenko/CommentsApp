@@ -43,7 +43,9 @@ public class CommentService(AppDbContext context,
         }
 
         var parentComment = dto.ParentCommentId.HasValue
-            ? await _context.Comments.FindAsync(dto.ParentCommentId.Value)
+            ? await _context.Comments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == dto.ParentCommentId.Value)
             : null;
 
         if (dto.ParentCommentId.HasValue && parentComment == null)
@@ -85,6 +87,7 @@ public class CommentService(AppDbContext context,
         }
 
         var query = _context.Comments
+            .AsNoTracking()
             .Include(c => c.User)
             .Where(c => c.ParentCommentId == null);
 
@@ -134,6 +137,7 @@ public class CommentService(AppDbContext context,
     public async Task<IEnumerable<ReplyDto>> GetRepliesAsync(int parentId)
     {
         var parent = await _context.Comments
+            .AsNoTracking()
             .Include(c => c.Replies)
                 .ThenInclude(r => r.Replies)
             .Include(c => c.Replies)
