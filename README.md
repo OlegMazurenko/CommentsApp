@@ -1,6 +1,6 @@
 # CommentsApp
 
-A full-stack .NET + Angular application with nested comments, CAPTCHA protection, file uploads, and SignalR updates.
+A full-stack .NET + Angular application with pagination, nested comments, CAPTCHA protection, file uploads, and SignalR updates.
 
 ## 🧰 Stack
 
@@ -51,4 +51,5 @@ docker-compose up --build
 
 ---
 
-##🎥 \[Watch demo\](App%20functionality%20showcase.mp4)
+## 🎥 Watch demo
+[Video](App%20functionality%20showcase.mp4)
