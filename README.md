@@ -34,7 +34,7 @@ A full-stack .NET + Angular application with pagination, nested comments, CAPTCH
 ### Clone the repository
 
 ```bash
-git clone https://github.com/your-username/CommentsApp.git
+git clone https://github.com/OlegMazurenko/CommentsApp.git
 cd CommentsApp
 ```
 
