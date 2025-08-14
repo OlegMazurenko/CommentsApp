@@ -1,6 +1,7 @@
 ﻿using CommentsApp.API.Data;
 using CommentsApp.API.Hubs;
 using CommentsApp.API.Models;
+using CommentsApp.API.Services.CommentSorting;
 using CommentsApp.API.Services.Interfaces;
 
 using Microsoft.AspNetCore.SignalR;
@@ -16,7 +17,8 @@ public class CommentService(AppDbContext context,
     ICaptchaService captchaService,
     ICommentValidator commentValidator,
     IUserService userService,
-    FileProcessorQueue fileProcessorQueue) : ICommentService
+    FileProcessorQueue fileProcessorQueue,
+    ICommentSortingResolver sortingResolver) : ICommentService
 {
     private readonly AppDbContext _context = context;
     private readonly IHtmlSanitizer _sanitizer = sanitizer;
@@ -27,6 +29,7 @@ public class CommentService(AppDbContext context,
     private readonly ICommentValidator _commentValidator = commentValidator;
     private readonly IUserService _userService = userService;
     private readonly FileProcessorQueue _fileProcessorQueue = fileProcessorQueue;
+    private readonly ICommentSortingResolver _sortingResolver = sortingResolver;
 
     public async Task<int> CreateCommentAsync(CommentDto dto)
     {
@@ -86,24 +89,16 @@ public class CommentService(AppDbContext context,
             return ((List<CommentListItemDto>, bool))cached;
         }
 
-        var query = _context.Comments
+        IQueryable<Comment> query = _context.Comments
             .AsNoTracking()
+            .Where(c => c.ParentCommentId == null)
             .Include(c => c.User)
-            .Where(c => c.ParentCommentId == null);
+            .Include(c => c.Replies)
+            .Include(c => c.Files);
 
-        query = sort switch
-        {
-            "user_asc" => query.OrderBy(c => c.User.UserName),
-            "user_desc" => query.OrderByDescending(c => c.User.UserName),
-            "email_asc" => query.OrderBy(c => c.User.Email),
-            "email_desc" => query.OrderByDescending(c => c.User.Email),
-            "date_asc" => query.OrderBy(c => c.CreatedAt),
-            _ => query.OrderByDescending(c => c.CreatedAt),
-        };
+        query = _sortingResolver.Resolve(sort).Sort(query);
 
         var commentEntities = await query
-            .Include(c => c.Replies)
-            .Include(c => c.Files)
             .Skip((page - 1) * pageSize)
             .Take(pageSize + 1)
             .ToListAsync();
