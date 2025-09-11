@@ -2,6 +2,7 @@ using CommentsApp.API.Data;
 using CommentsApp.API.Hubs;
 using CommentsApp.API.Models.Options;
 using CommentsApp.API.Services;
+using CommentsApp.API.Services.CommentSorting;
 using CommentsApp.API.Services.Interfaces;
 
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<FileProcessorQueue>();
+
 builder.Services.AddScoped<ICaptchaService, CaptchaService>();
 builder.Services.AddScoped<IHtmlSanitizer, HtmlSanitizer>();
 builder.Services.AddScoped<ICommentService, CommentService>();
@@ -33,6 +35,15 @@ builder.Services.AddScoped<ICommentValidator, CommentValidator>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<ICacheService, CacheService>();
+
+builder.Services.AddScoped<ICommentSortingStrategy, DateAscendingSortingStrategy>();
+builder.Services.AddScoped<ICommentSortingStrategy, DateDescendingSortingStrategy>();
+builder.Services.AddScoped<ICommentSortingStrategy, EmailAscendingSortingStrategy>();
+builder.Services.AddScoped<ICommentSortingStrategy, EmailDescendingSortingStrategy>();
+builder.Services.AddScoped<ICommentSortingStrategy, UserAscendingSortingStrategy>();
+builder.Services.AddScoped<ICommentSortingStrategy, UserDescendingSortingStrategy>();
+builder.Services.AddScoped<ICommentSortingResolver, CommentSortingResolver>();
+
 builder.Services.AddHostedService(sp => sp.GetRequiredService<FileProcessorQueue>());
 
 var app = builder.Build();
